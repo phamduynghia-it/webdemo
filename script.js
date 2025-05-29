@@ -151,9 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
         zRange: 650,
         depthScale: { min: 0.6, max: 1.4 },
         durationRange: { base: 2, random: 3 },
-        creationIntervalTime: { text: 3800, heart: 5000 },
+        creationIntervalTime: { text: 3000, heart: 5000 },
         delayRange: 1.5,
-        initialCount: { text: 5, heart: 3 },
+        initialCount: { text: 20, heart: 5 },
         maxRotateDeg: 22,
         horizontalRange: { range: 180, offset: -40 }
     } : {
