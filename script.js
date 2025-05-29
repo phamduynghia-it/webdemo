@@ -7,9 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const messages = [
         "Cảm ơn vì em đã đến",
         "Anh sẽ luôn bên cạnh em",
-        "Làm người yêu anh nhé ♡",
-        "Anh yêu em nhiều lắm",
-        "Lt.long ♡ Ha.phng",
+        "Em yêu anh nhiều lắm",
         "Always by my side",
         "1 Year Anniversary",
         "Love u in every universe",
