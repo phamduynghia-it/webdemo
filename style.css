@@ -1,83 +1,217 @@
 body {
     margin: 0;
     background-color: #000;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
     color: #fff;
-    perspective: 1200px; /* PC */
-    touch-action: none;
-    -webkit-font-smoothing: antialiased;
+    perspective: 1200px; /* Giá trị mặc định cho PC */
+    touch-action: none; /* Ngăn các hành vi chạm mặc định của trình duyệt */
+    -webkit-font-smoothing: antialiased; /* Cải thiện hiển thị font */
     -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
+    overflow: hidden; /* Ngăn thanh cuộn xuất hiện */
 }
 
 #sparkle-container {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 0; overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Để không cản trở tương tác với các lớp trên */
+    z-index: 0; /* Nằm dưới cùng */
+    overflow: hidden;
 }
 
+/* --- Ngôi sao nền lấp lánh --- */
 .sparkle {
-    position: absolute; background-color: rgba(255, 255, 255, 0.6);
-    border-radius: 50%; animation-name: twinkle; animation-iteration-count: infinite;
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation-name: sparkle-blink;
+    animation-iteration-count: infinite;
+    /* z-index không cần thiết nếu #sparkle-container đã có z-index: 0 */
 }
 
-@keyframes twinkle {
-    0%, 100% { opacity: 0.1; transform: scale(0.6); }
-    50% { opacity: 0.8; transform: scale(1); }
+@keyframes sparkle-blink {
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
 }
 
-.container {
-    position: relative; width: 100vw; height: 100vh;
-    transform-style: preserve-3d;
-    transition: transform 0.2s ease-out; /* PC */
-    overflow: hidden; z-index: 1;
+/* --- Sao băng --- */
+.shooting-star {
+    position: absolute;
+    width: auto; /* Chiều rộng tự động theo nội dung (nếu có) hoặc đuôi */
+    height: var(--shooting-star-length, 100px); /* Độ dài đuôi, đặt bởi JS */
+    animation-name: shoot-trajectory;
+    animation-timing-function: cubic-bezier(0.3, 0, 0.7, 1); /* Tạo chuyển động mượt */
+    animation-fill-mode: forwards; /* Giữ trạng thái cuối của animation */
+    z-index: 1; /* Nằm trên sao nền, dưới chữ/tim/ảnh rơi */
+    pointer-events: none;
+    opacity: 0; /* Bắt đầu ẩn */
+    transform-origin: 0 0; /* Điểm xoay là góc trên bên trái (vị trí đầu sao băng) */
+    /* transform (vị trí và góc) sẽ được đặt bởi JS ban đầu, sau đó là animation */
 }
 
-.falling-text, .falling-heart {
-    position: absolute; white-space: nowrap; user-select: none;
-    animation: fall var(--fall-duration) linear var(--fall-delay) infinite;
-    will-change: transform, opacity;
+.shooting-star::before {
+    /* Đầu sao băng - "dấu chấm" */
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px; /* Kích thước của đầu sao băng */
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.95); /* Màu trắng sáng */
+    border-radius: 50%;
+    box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.8), /* Glow trắng */
+        0 0 20px 5px rgba(220, 220, 255, 0.5); /* Thêm chút ánh xanh/tím nhẹ cho glow */
+    animation: head-fade var(--shooting-star-duration)
+        cubic-bezier(0.3, 0, 0.7, 1) forwards; /* Animation mờ dần cho đầu */
+}
+
+.shooting-star::after {
+    /* Đuôi sao băng - "vệt thẳng" */
+    content: "";
+    position: absolute;
+    top: 3px; /* Bắt đầu từ giữa đầu sao băng (nửa chiều cao của ::before) */
+    left: 2.25px; /* Căn giữa với đầu sao băng ( (6px head - 1.5px tail_width) / 2 ) */
+    width: 1.5px; /* Độ rộng của đuôi */
+    height: 100%; /* Chiều dài bằng chiều cao của .shooting-star container */
+    background: linear-gradient( /* Gradient cho hiệu ứng đuôi mờ dần */
+        to bottom,
+        rgba(255, 255, 255, 0.7) 0%,  /* Sáng ở gần đầu */
+        rgba(255, 255, 255, 0.3) 60%, /* Mờ dần */
+        rgba(255, 255, 255, 0) 100%   /* Hoàn toàn mờ ở cuối đuôi */
+    );
+    animation: tail-fade-effect var(--shooting-star-duration)
+        cubic-bezier(0.3, 0, 0.7, 1) forwards; /* Animation mờ dần cho đuôi */
+}
+
+/* Animation cho quỹ đạo bay của cả cụm sao băng */
+@keyframes shoot-trajectory {
+    0% {
+        opacity: 0;
+        transform: translate(var(--start-x), var(--start-y)) /* Vị trí bắt đầu */
+            rotate(var(--angle)); /* Góc bay */
+    }
+    20% { /* Hiện ra nhanh */
+        opacity: 1;
+    }
+    85% { /* Bắt đầu mờ dần khi gần cuối quỹ đạo */
+        opacity: 0.7;
+    }
+    100% { /* Hoàn toàn mờ và đến điểm cuối */
+        opacity: 0;
+        transform: translate(var(--end-x), var(--end-y)) rotate(var(--angle));
+    }
+}
+/* Animation mờ dần cho đầu sao băng */
+@keyframes head-fade {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    85% { opacity: 0.7;}
+    100% { opacity: 0; }
+}
+/* Animation mờ dần cho đuôi sao băng */
+@keyframes tail-fade-effect {
+    0% { opacity: 0; }
+    20% { opacity: 0.7; } /* Đuôi có thể không sáng bằng đầu */
+    70% { opacity: 0.5; }
+    100% { opacity: 0; }
+}
+
+.container { /* Container cho các phần tử rơi (chữ, tim, ảnh) */
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    transform-style: preserve-3d; /* Kích hoạt không gian 3D cho các phần tử con */
+    transition: transform 0.2s ease-out; /* Thời gian chuyển động khi xoay (PC) */
+    overflow: hidden; /* Ngăn nội dung tràn ra ngoài */
+    z-index: 2; /* Nằm trên sao băng và sao nền */
+}
+
+/* Style chung cho tất cả các phần tử rơi */
+.falling-text,
+.falling-heart,
+.falling-image {
+    position: absolute;
+    white-space: nowrap; /* Ngăn chữ xuống dòng (nếu có) */
+    user-select: none; /* Không cho phép người dùng chọn text/ảnh */
+    animation: fall var(--fall-duration) linear var(--fall-delay) infinite; /* Áp dụng animation rơi */
+    will-change: transform, opacity; /* Tối ưu hóa hiệu suất cho animation */
 }
 
 /* Chữ trắng với hiệu ứng glow "ánh sao" */
 .falling-text {
     color: #fff;
-    text-shadow:
-        0 0 5px #fff,
-        0 0 10px #fff,
-        0 0 15px #fff,  /* Lớp glow trắng mạnh hơn */
-        0 0 25px #ffdde5, /* Thêm một lớp glow hồng rất nhạt, rộng hơn */
-        0 0 35px #ffc0cb; /* Lớp glow hồng nhạt nhất, rộng nhất */
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 25px #ffdde5,
+        0 0 35px #ffc0cb;
 }
 
 /* Chữ hồng với hiệu ứng glow "ánh sao" */
 .falling-text.pink {
     color: #ff99cc; /* Màu hồng chính */
-    text-shadow:
-        0 0 5px #fff,       /* Lớp glow trắng sát chữ */
-        0 0 10px #ffe5f0,   /* Lớp glow hồng rất nhạt */
-        0 0 15px #ffb3da,   /* Lớp glow hồng nhạt */
-        0 0 25px #ff80bf,   /* Lớp glow hồng đậm hơn một chút */
-        0 0 35px #ff66b3;   /* Lớp glow hồng đậm nhất, rộng nhất */
+    text-shadow: 0 0 5px #fff, 0 0 10px #ffe5f0, 0 0 15px #ffb3da,
+        0 0 25px #ff80bf, 0 0 35px #ff66b3;
 }
 
-/* Bỏ các class màu .red, .blue, .yellow */
-
+/* Trái tim rơi */
 .falling-heart {
-    font-size: var(--heart-size);
+    font-size: var(--heart-size); /* Kích thước đặt bởi JS */
     text-shadow: 0 0 8px rgba(255, 0, 0, 0.7), 0 0 15px rgba(255, 80, 80, 0.5);
 }
 
-@keyframes fall {
-    0% { transform: translateY(-120px) var(--initial-z-transform); opacity: 0; }
-    5% { opacity: 0.3; } 10% { opacity: 0.8; } 12% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(105vh) var(--initial-z-transform); opacity: 0; }
+/* Ảnh rơi */
+.falling-image {
+    /* position, animation, will-change đã có ở style chung */
+    display: flex; /* Để căn chỉnh ảnh bên trong nếu cần */
+    align-items: center;
+    justify-content: center;
+    /* z-index: 2; - Không cần thiết nếu .container đã có z-index cao hơn #sparkle-container */
+    /* Kích thước (width) sẽ được đặt bởi JS */
+}
+.falling-image img {
+    display: block; /* Loại bỏ khoảng trống thừa dưới ảnh */
+    width: 100%;    /* Ảnh chiếm toàn bộ chiều rộng của div.falling-image */
+    height: auto;   /* Giữ tỷ lệ khung hình của ảnh */
+    pointer-events: none; /* Để không cản trở tương tác chạm/chuột lên container chính */
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4)); /* Đổ bóng nhẹ cho ảnh */
+    border-radius: 8px; /* Tùy chọn bo góc cho ảnh */
 }
 
+/* Animation rơi chung cho chữ, tim, ảnh */
+@keyframes fall {
+    0% {
+        transform: translateY(-120px) var(--initial-z-transform); /* Bắt đầu từ trên cao, ngoài màn hình */
+        opacity: 0; /* Hoàn toàn mờ */
+    }
+    5% { opacity: 0.3; } /* Bắt đầu hiện ra */
+    10% { opacity: 0.8; }
+    12% { opacity: 1; }  /* Hoàn toàn rõ nét khi đã vào màn hình */
+    90% { opacity: 1; }  /* Giữ nguyên độ mờ */
+    100% {
+        transform: translateY(105vh) var(--initial-z-transform); /* Rơi xuống hết màn hình */
+        opacity: 0; /* Mờ dần khi chạm đáy */
+    }
+}
+
+/* Điều chỉnh responsive cho màn hình nhỏ hơn */
 @media (max-width: 768px) {
-    body { perspective: 700px; }
-    .container { transition: transform 0.12s ease-out; }
+    body {
+        perspective: 700px; /* Giảm perspective để hiệu ứng 3D rõ hơn trên mobile */
+    }
+    .container {
+        transition: transform 0.12s ease-out; /* Xoay nhanh hơn trên mobile */
+    }
 }
 @media (max-width: 480px) {
-    body { perspective: 600px; }
+    body {
+        perspective: 600px; /* Giảm perspective hơn nữa cho màn hình rất nhỏ */
+    }
 }
